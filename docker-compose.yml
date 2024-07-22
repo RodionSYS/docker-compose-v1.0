@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./front-end
+    ports:
+      - "3001:80"
+    volumes:
+      - frontend-build:/usr/share/nginx/html
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - frontend-build:/app/front-end/build
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: mysql://Main_user:Sepio_password@host.docker.internal:3306/nodejs_login
+    # Removed depends_on for db since we're using an external database
+    command: sh -c "npx prisma generate && node server.js"
+
+# Comment out or remove the db service if you don't need a local database
+#  db:
+#    image: mysql:8.0
+#    environment:
+#      MYSQL_ROOT_PASSWORD: Sepio
+#      MYSQL_DATABASE: nodejs_login
+#      MYSQL_USER: Main_user
+#      MYSQL_PASSWORD: Sepio_password
+#    ports:
+#      - "3306:3306"
+#    volumes:
+#      - db-data:/var/lib/mysql
+#    command: --default-authentication-plugin=mysql_native_password
+
+volumes:
+  frontend-build:
+#  db-data:
