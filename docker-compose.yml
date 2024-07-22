@@ -3,7 +3,7 @@ version: '3.8'
 services:
   frontend:
     build:
-      context: ./front-end
+      context: /home/maks/docker/docker-compose-v1.0/front-end
     ports:
       - "3001:80"
     volumes:
