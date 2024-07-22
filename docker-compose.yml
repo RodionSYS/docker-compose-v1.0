@@ -4,7 +4,7 @@ services:
   frontend:
     build:
       context: ./front-end
-    image: rodionsys/sepio-app-frontend:v1
+    image: rodionsys/sepio-app-frontend:latest
     ports:
       - "3001:80"
     volumes:
@@ -15,7 +15,7 @@ services:
   backend:
     build:
       context: ./backend
-    image: rodionsys/sepio-app-backend:v1
+    image: rodionsys/sepio-app-backend:latest
     ports:
       - "3000:3000"
     env_file:
