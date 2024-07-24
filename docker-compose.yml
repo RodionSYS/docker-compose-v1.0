@@ -1,48 +1,52 @@
-version: '3.8'
+version: '3.9'
 
 services:
   frontend:
     build:
       context: ./front-end
-    image: rodionsys/sepio-app-frontend:latest
+      dockerfile: Dockerfile
     ports:
       - "3001:80"
     volumes:
       - frontend-build:/usr/share/nginx/html
-    depends_on:
-      - backend
 
   backend:
     build:
       context: ./backend
-    image: rodionsys/sepio-app-backend:latest
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
-    env_file:
-      - ./backend/.env
-    volumes:
-      - frontend-build:/app/front-end/build
     environment:
-      NODE_ENV: development
-      DATABASE_URL: mysql://Main_user:Sepio_password@host.docker.internal:3306/nodejs_login
-    # Removed depends_on for db since we're using an external database
-    command: sh -c "npx prisma generate && node server.js"
+      - DATABASE_URL=mysql://Main_user:Sepio_password@sepio-app-mysql-1:3306/nodejs_login
+    volumes:
+      - backend-data:/app/data
+      - frontend-build:/usr/share/nginx/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: >
+      sh -c "
+        npx prisma migrate deploy &&
+        npm start
+      "
 
-# Comment out or remove the db service if you don't need a local database
-#  db:
-#    image: mysql:8.0
-#    environment:
-#      MYSQL_ROOT_PASSWORD: Sepio
-#      MYSQL_DATABASE: nodejs_login
-#      MYSQL_USER: Main_user
-#      MYSQL_PASSWORD: Sepio_password
-#    ports:
-#      - "3306:3306"
-#    volumes:
-#      - db-data:/var/lib/mysql
-#    command: --default-authentication-plugin=mysql_native_password
-#
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: nodejs_login
+      MYSQL_USER: Main_user
+      MYSQL_PASSWORD: Sepio_password
+      MYSQL_INITDB_SKIP_TZINFO: '1'
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   frontend-build:
-#  db-data:
+  backend-data:
+  mysql:
